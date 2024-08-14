@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { addComment, addReply } from '../commentsSlice';
+import { addComment } from '../commentsSlice';
 import Comment from './Comment';
 
 const CommentsList = () => {
@@ -25,35 +25,17 @@ const CommentsList = () => {
     }
   };
 
-  const handleAddReply = (parentId, replyText, replyName) => {
-    dispatch(addReply({
-      parentId,
-      reply: {
-        id: Date.now(),
-        name: replyName.trim() || 'Anonymous',
-        text: replyText.trim(),
-        date: new Date().toISOString(),
-        replies: [],
-      },
-    }));
-  };
-
   const sortedComments = useMemo(() => {
-    const flattenAndSort = (commentsArray) => {
-      let flattened = [];
-      for (let comment of commentsArray) {
-        flattened.push(comment);
-        if (comment.replies && comment.replies.length > 0) {
-          flattened = flattened.concat(flattenAndSort(comment.replies));
-        }
-      }
-      return flattened.sort((a, b) => {
+    const sortComments = (commentsArray) => {
+      // Create a deep copy of the comments array
+      const commentsCopy = JSON.parse(JSON.stringify(commentsArray));
+      return commentsCopy.sort((a, b) => {
         const dateA = new Date(a.date).getTime();
         const dateB = new Date(b.date).getTime();
         return sortOrder === 'newest' ? dateB - dateA : dateA - dateB;
       });
     };
-    return flattenAndSort(comments);
+    return sortComments(comments);
   }, [comments, sortOrder]);
 
   return (
@@ -88,8 +70,7 @@ const CommentsList = () => {
         {sortedComments.map(comment => (
           <Comment 
             key={comment.id} 
-            comment={comment} 
-            onAddReply={handleAddReply}
+            comment={comment}
           />
         ))}
       </div>
@@ -98,3 +79,4 @@ const CommentsList = () => {
 };
 
 export default CommentsList;
+

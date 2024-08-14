@@ -1,5 +1,4 @@
 import { createSlice } from '@reduxjs/toolkit';
-
 const loadState = () => {
   try {
     const serializedState = localStorage.getItem('comments');
@@ -8,7 +7,6 @@ const loadState = () => {
     return [];
   }
 };
-
 const saveState = (state) => {
   try {
     const serializedState = JSON.stringify(state);
@@ -16,6 +14,20 @@ const saveState = (state) => {
   } catch (err) {
     console.error('Could not save state', err);
   }
+};
+const deleteCommentById = (comments, id) => {
+  return comments.reduce((acc, comment) => {
+    if (comment.id === id) {
+      return acc; 
+    }
+    if (comment.replies && comment.replies.length > 0) {
+      const updatedReplies = deleteCommentById(comment.replies, id);
+      if (updatedReplies.length !== comment.replies.length) {
+       return [...acc, { ...comment, replies: updatedReplies }];
+      }
+    }
+    return [...acc, comment];
+  }, []);
 };
 
 const commentsSlice = createSlice({
@@ -90,16 +102,5 @@ const addReplyToNestedComments = (replies, commentId, reply) => {
   });
 };
 
-const deleteCommentById = (comments, id) => {
-  return comments.filter(comment => {
-    if (comment.id === id) return false;
-    if (comment.replies) {
-      comment.replies = deleteCommentById(comment.replies, id);
-    }
-    return true;
-  });
-};
-
 export const { addComment, editComment, deleteComment, addReply } = commentsSlice.actions;
 export default commentsSlice.reducer;
-

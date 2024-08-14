@@ -63,7 +63,7 @@ const findCommentById = (comments, id) => {
   return null;
 };
 
-// Helper function to delete a comment by ID (including nested replies)
+
 const deleteCommentById = (comments, id) => {
   return comments.filter(comment => {
     if (comment.id === id) return false;

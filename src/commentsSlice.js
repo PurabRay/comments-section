@@ -40,17 +40,27 @@ const commentsSlice = createSlice({
       return newState;
     },
     addReply: (state, action) => {
-      const { parentId, reply } = action.payload;
-      const comment = findCommentById(state, parentId);
-      if (comment) {
-        if (!comment.replies) comment.replies = [];
-        comment.replies.push(reply);
-        saveState(state);
-      }
+      const { commentId, reply } = action.payload;
+      const newState = state.map(comment => {
+        if (comment.id === commentId) {
+          return {
+            ...comment,
+            replies: [...(comment.replies || []), reply],
+          };
+        }
+        if (comment.replies) {
+          return {
+            ...comment,
+            replies: addReplyToNestedComments(comment.replies, commentId, reply),
+          };
+        }
+        return comment;
+      });
+      saveState(newState);
+      return newState;
     },
   },
 });
-
 
 const findCommentById = (comments, id) => {
   for (let comment of comments) {
@@ -63,6 +73,22 @@ const findCommentById = (comments, id) => {
   return null;
 };
 
+const addReplyToNestedComments = (replies, commentId, reply) => {
+  return replies.map(replyComment => {
+    if (replyComment.id === commentId) {
+      return {
+        ...replyComment,
+        replies: [...(replyComment.replies || []), reply],
+      };
+    } else if (replyComment.replies) {
+      return {
+        ...replyComment,
+        replies: addReplyToNestedComments(replyComment.replies, commentId, reply),
+      };
+    }
+    return replyComment;
+  });
+};
 
 const deleteCommentById = (comments, id) => {
   return comments.filter(comment => {
@@ -76,3 +102,4 @@ const deleteCommentById = (comments, id) => {
 
 export const { addComment, editComment, deleteComment, addReply } = commentsSlice.actions;
 export default commentsSlice.reducer;
+
